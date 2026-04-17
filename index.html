@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,user-scalable=yes,viewport-fit=cover">
+<meta name="theme-color" content="#080c14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>BitOS Cloud v3 — Mining Dashboard</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%2300e5ff'/%3E%3Ctext x='50' y='68' font-size='60' font-weight='800' text-anchor='middle' fill='%23080c14' font-family='monospace'%3EB%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#080c14;--panel:#0d1421;--panel2:#111a2e;--border:#1e2d47;
+  --text:#e8f0fe;--muted:#5a7090;--accent:#00e5ff;--accent2:#7c3aed;
+  --green:#00d97e;--red:#ff2d55;--yellow:#ffb800;--orange:#ff7a00;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;
+  min-height:100vh;overflow-x:hidden}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+a{color:var(--accent);text-decoration:none}
+button{cursor:pointer;font-family:inherit}
+input,select,textarea{font-family:inherit;background:var(--panel2);border:1px solid var(--border);
+  color:var(--text);border-radius:8px;padding:10px 12px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+
+.app{max-width:1400px;margin:0 auto;padding:20px}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;
+  padding-bottom:16px;border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:44px;height:44px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:22px;
+  font-weight:800;color:var(--bg);font-family:monospace}
+.logo-text h1{font-size:18px;font-weight:800}
+.logo-text .ver{font-size:11px;color:var(--muted);font-family:monospace}
+
+.nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+.nav-btn{background:var(--panel);border:1px solid var(--border);color:var(--muted);
+  padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;transition:all .15s}
+.nav-btn.active{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.nav-btn:hover:not(.active){border-color:var(--accent);color:var(--text)}
+
+.page{display:none}
+.page.active{display:block}
+
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px}
+.card-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;
+  font-family:monospace;margin-bottom:10px}
+.card-value{font-size:26px;font-weight:800;margin-bottom:4px}
+.card-sub{font-size:12px;color:var(--muted)}
+
+#toast-wrap{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;
+  gap:8px;max-width:340px}
+.toast{background:var(--panel);border:1px solid var(--border);border-radius:10px;font-size:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);transition:opacity .3s}
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:none;
+  align-items:center;justify-content:center;padding:20px}
+.modal.show{display:flex}
+.modal-box{background:var(--panel);border:1px solid var(--border);border-radius:16px;
+  padding:24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+
+.pwa-install{position:fixed;bottom:20px;right:20px;background:var(--accent);color:var(--bg);
+  border:none;border-radius:50%;width:54px;height:54px;font-size:22px;display:none;
+  align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,229,255,.4);z-index:500}
+
+@media(max-width:640px){
+  .app{padding:12px}
+  .header{flex-direction:column;gap:12px;align-items:flex-start}
+  .nav{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+  .nav-btn{flex-shrink:0}
+  .card-value{font-size:22px}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">B</div>
+      <div class="logo-text">
+        <h1>BitOS Cloud</h1>
+        <div class="ver">v3.4.0 — Mining Dashboard</div>
+      </div>
+    </div>
+    <div id="header-status"></div>
+  </header>
+
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showPage('dash')">Dashboard</button>
+    <button class="nav-btn" onclick="showPage('xmr')">XMR</button>
+    <button class="nav-btn" onclick="showPage('kas')">KAS</button>
+    <button class="nav-btn" onclick="showPage('rigs')">Rigs</button>
+    <button class="nav-btn" onclick="showPage('wallet')">Wallet</button>
+    <button class="nav-btn" onclick="showPage('settings')">Settings</button>
+  </nav>
+
+  <div id="page-dash" class="page active">
+    <div class="grid" id="dash-grid">
+      <div class="card">
+        <div class="card-title">Total Hashrate</div>
+        <div class="card-value" id="kpi-hashrate">— H/s</div>
+        <div class="card-sub">Tous workers actifs</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Revenu 24h</div>
+        <div class="card-value" id="kpi-revenue">$ —</div>
+        <div class="card-sub">XMR + KAS estimés</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Workers Online</div>
+        <div class="card-value" id="kpi-workers">—</div>
+        <div class="card-sub">HiveOS sync</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Solde Total</div>
+        <div class="card-value" id="kpi-balance">$ —</div>
+        <div class="card-sub">XMR + KAS pools</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="page-xmr" class="page"></div>
+  <div id="page-kas" class="page"></div>
+  <div id="page-rigs" class="page"></div>
+  <div id="page-wallet" class="page"></div>
+  <div id="page-settings" class="page"></div>
+</div>
+
+<div id="toast-wrap"></div>
+<button class="pwa-install" id="pwa-install-btn" onclick="installPWA()">+</button>
+
+<script>
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  var p = document.getElementById('page-'+name); if(p) p.classList.add('active');
+  event && event.target && event.target.classList.add('active');
+}
+function el(id){ return document.getElementById(id); }
+function setText(id, txt){ var e = el(id); if(e) e.textContent = txt; }
+function getApiBase(name){
+  var hosts = { xmrchain:'/proxy/xmrchain', kaspa:'/proxy/kaspa', hiveos:'/proxy/hiveos',
+    coingecko:'/proxy/coingecko', xmrPool:'/proxy/xmr-pool', kasPool:'/proxy/kas-pool' };
+  return hosts[name] || '';
+}
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(e){console.warn('SW:',e);});
+  });
+}
+</script>
+<script defer src="app.js"></script>
+<script>
+window.addEventListener('load', function(){
+  setTimeout(function(){
+    if(typeof renderDash !== 'function'){
+      console.warn('[BitOS] app.js non chargé ou incomplet');
+    }
+  }, 1500);
+});
+</script>
+</body>
+</html>
