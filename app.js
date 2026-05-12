@@ -7,6 +7,12 @@ const chartInited = {};
 
 
 // ── TOAST NOTIFICATION ─────────────────────────────────────────
+/**
+ * @param {'success'|'ok'|'error'|'err'|'danger'|'warn'|'warning'|'info'} type
+ * @param {string} title
+ * @param {string} [msg]
+ * @param {number} [duration]
+ */
 function toast(type, title, msg, duration) {
   const wrap = document.getElementById('toast-wrap');
   if (!wrap) return;
