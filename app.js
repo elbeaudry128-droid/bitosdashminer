@@ -113,9 +113,10 @@ async function fetchKASNetworkStats() {
 }
 
 // Revenus miniers réels pour un coin
+/** @param {string} coin */
 function calcMiningRevenue(coin) {
-  const ns = NET_STATS[coin];
-  const hrUnit = RIGS.filter(r => r.coin === coin && r.status !== 'offline')
+  const ns = NET_STATS[coin as keyof typeof NET_STATS];
+  const hrUnit = (RIGS as any[]).filter(r => r.coin === coin && r.status !== 'offline')
                      .reduce((s, r) => s + (r.hrn || 0), 0);
   if (!hrUnit || !ns || !ns.networkHashrate || !ns.blockReward)
     return {daily:0, monthly:0, coinPerDay:0, hr:hrUnit, hrHS:0, netDaily:0, netMonthly:0};
@@ -126,9 +127,9 @@ function calcMiningRevenue(coin) {
   const coinPerDay = share * ns.blockReward * blocksPerDay;
   const price      = coin === 'XMR' ? xmrP : kasP;
   const daily      = coinPerDay * (price || 0);
-  const watt       = RIGS.filter(r => r.coin === coin && r.status !== 'offline')
+  const watt       = (RIGS as any[]).filter(r => r.coin === coin && r.status !== 'offline')
                          .reduce((s, r) => s + (r.watt || 0), 0);
-  const elecRate   = parseFloat(el('m-elec')?.value || '0.20') || 0.20;
+  const elecRate   = parseFloat((el('m-elec') as HTMLInputElement)?.value || '0.20') || 0.20;
   const elecDay    = (watt / 1000) * elecRate * 24;
   const feeDay     = daily * 0.006;
   const netDaily   = daily - elecDay - feeDay;
