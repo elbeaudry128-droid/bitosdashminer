@@ -1,6 +1,6 @@
 ---
 name: fix-typescript-errors
-description: 'Fix common TypeScript errors in JavaScript files, such as implicit any types on parameters. Use when encountering TypeScript compilation errors related to implicit any types in .js files.'
+description: 'Fix common TypeScript errors in JavaScript files with TypeScript checks enabled, such as implicit any types on parameters. Use when encountering TypeScript compilation errors related to implicit any types in JavaScript files.'
 argument-hint: 'Describe the error or file path'
 user-invocable: true
 ---
