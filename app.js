@@ -62,7 +62,8 @@ async function fetchXMRNetworkStats() {
   } catch(e) {
     NET_STATS.XMR.networkHashrate = NET_STATS.XMR.networkHashrate || 2.85e9; // ~2.85 GH/s
     NET_STATS.XMR.blockReward     = NET_STATS.XMR.blockReward     || 0.6;
-    console.warn('[NET-XMR] offline:',e.message);
+    const errMsg = e instanceof Error ? e.message : String(e);
+    console.warn('[NET-XMR] offline:', errMsg);
     setAPIBadge('xmrnet','off');
   }
 }
